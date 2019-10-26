@@ -5,6 +5,8 @@
 #include <string>
 #include <ctime>
 
+#include "Point.h"
+
 std::condition_variable cv;
 std::mutex cv_m;
 bool notified_result_listener = false;
@@ -13,24 +15,6 @@ bool done = false;
 int current_function_value = 1;
 int current_argument_value = 1;
 std::fstream function_result;
-
-
-class Point {
-public:
-    int x;
-    int y;
-    std::string initialized_time;
-
-     Point(int x_value, int y_value, std::string initialized_time) {
-        this -> x = x_value;
-        this -> y = y_value;
-        this -> initialized_time = initialized_time;
-     }
-
-     std::string log_value() {
-         return std::to_string(this -> x) + " " + std::to_string(this -> y) + " " + this -> initialized_time + "\n";
-     }
-};
 
 
 void init_file(char filename[]) {
@@ -98,7 +82,7 @@ void log_writer() {
 }
 
 int main() {
-    std::thread factorial(factorial_calculation, rand() % 10);
+    std::thread factorial(factorial_calculation, 20);
     std::thread result(result_listener);
     std::thread log(log_writer);
 
