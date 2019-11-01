@@ -4,6 +4,7 @@
 #include <fstream>
 #include <string>
 #include <ctime>
+#include <memory>
 
 #include "Point.h"
 
@@ -37,9 +38,9 @@ void result_listener() {
 
     while (!done) {
         while (notified_result_listener) {
-            notified_result_listener = false;
             write_function_result(const_cast<char *>(filename), std::to_string(current_function_value));
 
+            notified_result_listener = false;
             notified_logger = true;
             cv.notify_all();
         }
@@ -47,8 +48,8 @@ void result_listener() {
     }
 }
 
-int factorial_calculation(int n) {
-    for (current_argument_value; current_argument_value <= n; current_argument_value++) {
+void factorial_calculation(int n) {
+    for (; current_argument_value <= n; current_argument_value++) {
         std::this_thread::sleep_for(std::chrono::seconds(1));
         std::unique_lock<std::mutex> lock(cv_m);
 
@@ -73,16 +74,15 @@ void log_writer() {
             notified_logger = false;
             time_t now = time(0);
             std::string initialized_time = ctime(&now);
-
-            Point current_point(current_argument_value, current_function_value, initialized_time);
-            write_function_result(const_cast<char *>(filename), current_point.log_value());
+            std::shared_ptr<Point> current_point(new Point(current_argument_value - 1, current_function_value, initialized_time));
+            write_function_result(const_cast<char *>(filename), current_point -> log_value());
         }
         cv.wait(lock);
     }
 }
 
 int main() {
-    std::thread factorial(factorial_calculation, 20);
+    std::thread factorial(factorial_calculation, rand() % 10);
     std::thread result(result_listener);
     std::thread log(log_writer);
 
@@ -90,6 +90,6 @@ int main() {
     result.join();
     log.join();
 
-    std::cout << "complete";
+    std::cout << "completed";
     return 0;
 }
